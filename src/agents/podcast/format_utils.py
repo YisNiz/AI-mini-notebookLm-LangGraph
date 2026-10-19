@@ -1,4 +1,4 @@
-from agents.podcast.schemas import PodcastCast
+from agents.podcast.schemas import PodcastCast, ResearchNote
 
 
 def format_cast(cast: PodcastCast) -> str:
@@ -18,3 +18,28 @@ def format_cast(cast: PodcastCast) -> str:
         f"  connection_to_topic: {g.connection_to_topic}"
     )
     return "\n\n".join(lines)
+
+
+def format_research(notes: list[ResearchNote]) -> str:
+    if not notes:
+        return "No research note exists for this lineup item."
+
+    blocks = []
+    for note in notes:
+        facts = (
+            "\n".join(f"- {fact}" for fact in note.key_facts)
+            or "- No concrete facts were retrieved."
+        )
+        citations = ", ".join(note.citations) or "No citations"
+        blocks.append(
+            f"Digest:\n{note.context_digest}\n\n"
+            f"Key facts:\n{facts}\n\n"
+            f"Citations: {citations}"
+        )
+    return "\n\n---\n\n".join(blocks)
+
+
+def format_recent_turns(turns: list) -> str:
+    if not turns:
+        return "No previous dialogue turns."
+    return "\n".join(f"{turn.speaker_name}: {turn.text_he}" for turn in turns)

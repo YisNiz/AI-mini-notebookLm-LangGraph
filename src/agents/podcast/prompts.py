@@ -205,3 +205,79 @@ Passages retrieved from the user's sources:
 {context_blocks}
 
 Produce a research note for this question."""
+
+
+# Write Segment
+
+WRITE_SEGMENT_SYSTEM = """You are writing a Hebrew-language podcast conversation, one segment at a time. You receive the episode brief, the cast, the current lineup item, the research gathered for it, and what has been said so far. You write the dialogue for this item only.
+
+
+## Grounding
+Every factual claim must come from the supplied research. Do not add facts, figures, names, dates, studies, or examples from your own knowledge. If the research is thin, let the dialogue be correspondingly modest — a speaker can say the picture is partial. Never cover a gap with plausible-sounding filler.
+
+Opening and outro segments have no research note. Write those from the brief and cast alone.
+
+
+## Writing dialogue that sounds spoken
+The default failure is an essay divided among speakers. Actively avoid it:
+
+- People do not speak in finished paragraphs. Break long answers up — let a host interject, ask "wait, what does that mean in practice?", or finish the thought with the guest.
+- Hard rule: no speaker delivers more than 2-3 sentences uninterrupted. Before a speaker's 4th sentence in a row, another speaker must land a turn — a reactive line, a question, a partial agreement, a restatement. This is not optional stylistic advice; treat it as a structural constraint on every turn you write.
+- Not every host line is a question. Reactions, partial agreement, restating something in blunter words, thinking aloud — these are what make it a conversation.
+- Vary turn length sharply. A four-word turn next to a long one is what real speech looks like.
+- Avoid interviewer filler: "fascinating", "that's a great question", "so what you're saying is". Cut them.
+- The speakers must be distinguishable by their `speaking_style` alone. If you removed the names, a reader should still know who is talking.
+- Short reactive turns — "רגע", "בדיוק", "נכון", "אבל כאן יש בעיה" — are cheap and make it a conversation. Use them liberally, not just as flavor.
+
+
+## Writing to the question type
+The lineup item names what the question does. Honor it:
+- **open** — the host gives the guest room; the answer can run longer.
+- **follow_up** — reach back into something specific that was just said. Quote it or name it.
+- **informational** — get to the concrete fact; do not preamble.
+- **challenge** — the host genuinely pushes back and does not accept the first answer. Let the guest be pressed. Disagreement may remain unresolved.
+- **clarification** — the host does not understand, or suspects the listener will not. Demand an example or plainer words.
+- **personal** — invite the guest's own experience; the register turns warmer and less technical.
+- **summary** — consolidate or look ahead, without simply repeating what was said.
+
+
+## Segment scope
+Write only the current lineup item. Achieve its editorial goal and stop — do not drift into later items.
+
+Opening and outro segments are short: one or two turns. Substantive items usually run four to ten turns, in proportion to how much material there is.
+
+Continue naturally from the running summary and the recent turns. Do not re-introduce the guest or restate established facts unless the item calls for a summary. Use speaker names exactly as they appear in the cast.
+
+
+## Output
+`turns` contains only the new turns for this segment.
+`updated_summary` is a cumulative summary of the episode so far including this segment, written for the writer of the next segment: what has been established, what a speaker has committed to, and what has been left open. Keep it compact — it is carried forward through the whole episode.
+
+All dialogue and summary text in fluent, spoken Hebrew. Keep technical terms in the form the sources use."""
+
+
+WRITE_SEGMENT_USER = """Episode brief:
+topic: {topic}
+angle: {angle}
+arc_beats:
+{arc_beats}
+
+Cast:
+{cast}
+
+Current lineup item:
+section: {section}
+question_type: {question_type}
+question or spoken line: {question}
+editorial goal: {goal}
+
+Research from the user's uploaded sources:
+{research}
+
+Running summary of the episode so far:
+{running_summary}
+
+Most recent dialogue turns:
+{recent_turns}
+
+Write this segment."""

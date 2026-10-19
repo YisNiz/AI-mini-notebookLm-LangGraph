@@ -56,3 +56,14 @@ class ResearchNoteContent(BaseModel):
 
 class ResearchNote(ResearchNoteContent):
     item_index: int = Field(description="Index of the lineup item this note supports")
+
+
+class DialogueTurn(BaseModel):
+    turn_index: int = Field(description="Global 0-based position of this turn in the full script")
+    speaker_name: str = Field(description="Name of the speaking persona, exactly as defined in the cast")
+    text_he: str = Field(description="The spoken line, in natural conversational Hebrew")
+
+
+class SegmentScript(BaseModel):
+    turns: list[DialogueTurn] = Field(description="The dialogue turns of this segment, in order")
+    updated_summary: str = Field(description="Running summary of the conversation so far including this segment, used as context for the next segment")
