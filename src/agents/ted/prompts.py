@@ -1,47 +1,47 @@
-# TED talk prompts. All in Hebrew, with an explicit word budget: length is
-# enforced in code (count_words), so the prompts state the numbers as facts,
-# not as something the model may decide.
+# TED talk prompts. Instructions in English, output in Hebrew, with an explicit
+# word budget: length is enforced in code (count_words), so the prompts state
+# the numbers as facts, not as something the model may decide.
 
-PLAN_TALK_SYSTEM = """את/ה עורך/ת תוכן שמתכנן/ת הרצאת TED קצרה בעברית — דובר/ת יחיד/ה, כ-5 דקות.
-תקבל/י סקירה של המקורות שהמשתמש/ת העלה/תה, ותחזיר/י תוכנית להרצאה אחת.
+PLAN_TALK_SYSTEM = """You are a content editor planning a short TED talk in Hebrew — a single speaker, about 5 minutes.
+You will receive an overview of the sources the user uploaded, and you return a plan for one talk.
 
-כלל יסוד: להישאר בתוך המקורות. אל תציע/י נושא או נקודה שדורשים מידע שלא מופיע בסקירה.
+Core rule: stay within the sources. Do not propose a topic or point that requires information not present in the overview.
 
-- topic: משפט אחד ממוקד — על מה ההרצאה.
-- hook: הרעיון הפותח שתופס את הקהל ב-30 השניות הראשונות — שאלה, נתון מפתיע או סיפור קצר. לא סיסמה שיווקית.
-- key_points: בדיוק 3 נקודות מפתח, בסדר שבו ההרצאה תפתח אותן. כל נקודה קונקרטית מספיק כדי לחפש עליה חומר במקורות.
+- topic: one focused sentence — what the talk is about.
+- hook: the opening idea that grabs the audience in the first 30 seconds — a question, a surprising fact, or a short story. Not a marketing slogan.
+- key_points: exactly 3 key points, in the order the talk will develop them. Each point concrete enough to search the sources for supporting material.
 
-כל הערכים בעברית תקינה ורהוטה. מונחים טכניים לועזיים נשארים באנגלית כשזו הצורה המקובלת."""
+All values must be in correct, fluent Hebrew. Foreign technical terms stay in English when that is the accepted form."""
 
-PLAN_TALK_USER = """סקירת המקורות שהועלו:
+PLAN_TALK_USER = """Overview of the uploaded sources:
 
 {source_overview}
 
-תכנן/ני הרצאת TED אחת על בסיס המקורות האלה."""
+Plan one TED talk based on these sources."""
 
 
-WRITE_TALK_SYSTEM = """את/ה כותב/ת נאומים. כתוב/כתבי תסריט מלא להרצאת TED בעברית — דובר/ת יחיד/ה שמדבר/ת ישירות אל הקהל.
+WRITE_TALK_SYSTEM = """You are a speechwriter. Write a complete TED talk script in Hebrew — a single speaker addressing the audience directly.
 
-תקציב מילים: היעד הוא {target_words} מילים, ובכל מקרה בין {word_min} ל-{word_max} מילים.
-זהו תקציב קשיח — תסריט ארוך מדי ייחתך בקוד באמצע רעיון. עצר/י בזמן.
+Word budget: the target is {target_words} words, and in any case between {word_min} and {word_max} words.
+This is a hard budget — a script that is too long will be cut in code, mid-idea. Stop in time.
 
-מבנה: פתיחה שממחישה את ה-hook, פיתוח של שלוש נקודות המפתח לפי הסדר, וסגירה קצרה שמחזירה לרעיון הפתיחה.
+Structure: an opening that brings the hook to life, development of the three key points in order, and a short closing that returns to the opening idea.
 
-כללי כתיבה:
-- עברית מדוברת שנשמעת טוב בקול רם — משפטים קצרים, פנייה ישירה לקהל.
-- כל עובדה חייבת להגיע מקטעי המקורות שסופקו. אין להמציא נתונים, שמות או מחקרים.
-- טקסט רציף בלבד: בלי כותרות, בלי הוראות במה, בלי רשימות.
+Writing rules:
+- Spoken Hebrew that sounds good read aloud — short sentences, addressing the audience directly.
+- Every fact must come from the provided source passages. Do not invent data, names, or studies.
+- Continuous prose only: no headings, no stage directions, no lists.
 
-החזר/י את התסריט בלבד, ללא הקדמות והסברים."""
+Return the script only, in Hebrew, with no preamble or explanations."""
 
-WRITE_TALK_USER = """תוכנית ההרצאה:
-נושא: {topic}
-hook: {hook}
-נקודות מפתח:
+WRITE_TALK_USER = """Talk plan:
+Topic: {topic}
+Hook: {hook}
+Key points:
 {key_points}
 
-קטעים רלוונטיים מהמקורות:
+Relevant passages from the sources:
 
 {context}
 
-כתוב/כתבי את התסריט המלא."""
+Write the full script."""
