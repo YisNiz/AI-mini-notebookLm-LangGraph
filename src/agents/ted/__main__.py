@@ -18,12 +18,13 @@ for arg in sys.argv[1:]:
     print(f"loaded source: {path.name}")
 
 graph = build_ted_graph()
+config = {
+    "recursion_limit": 25,
+    "run_name": "ted-talk",
+    "metadata": {"job_id": "test"},
+}
 final_state = None
-for mode, chunk in graph.stream(
-    {"job_id": "test"},
-    config={"recursion_limit": 25},
-    stream_mode=["updates", "values"],
-):
+for mode, chunk in graph.stream({"job_id": "test"}, config=config, stream_mode=["updates", "values"]):
     if mode == "updates":
         for node in chunk:
             print(f">>> {node} done")
