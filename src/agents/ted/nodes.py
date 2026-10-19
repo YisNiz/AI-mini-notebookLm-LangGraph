@@ -1,3 +1,5 @@
+import re
+
 from agents.ted.models import get_model
 from agents.ted.prompts import (
     PLAN_TALK_SYSTEM,
@@ -6,7 +8,7 @@ from agents.ted.prompts import (
     WRITE_TALK_USER,
 )
 from agents.ted.schemas import TalkBrief
-from agents.ted.state import TARGET_WORDS, WORD_MAX, WORD_MIN, TedState
+from agents.ted.state import HARD_CAP, TARGET_WORDS, WORD_MAX, WORD_MIN, TedState
 
 from core.store import store
 from core.sources import build_sources_overview, format_docs
@@ -61,3 +63,26 @@ def write_talk(state: TedState) -> dict:
         },
     ])
     return {"script_he": response.text.strip()}
+
+
+def _sentences(text: str) -> list[str]:
+    return re.split(r"(?<=[.!?])\s+", text.strip())
+
+
+def count_words(state: TedState) -> dict:
+    """Pure code: count the script's words; hard-trim at a sentence boundary
+    if the model overshot HARD_CAP. The prompt asks for the budget — this node
+    enforces it."""
+    script = state["script_he"]
+    if len(script.split()) <= HARD_CAP:
+        return {"word_count": len(script.split())}
+
+    kept, used = [], 0
+    for sentence in _sentences(script):
+        n = len(sentence.split())
+        if kept and used + n > HARD_CAP:
+            break
+        kept.append(sentence)
+        used += n
+    trimmed = " ".join(kept)
+    return {"script_he": trimmed, "word_count": len(trimmed.split())}
