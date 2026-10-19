@@ -15,3 +15,6 @@ mcp.json
 
 # Local databases
 data/
+
+# LangGraph dev server
+.langgraph_api/

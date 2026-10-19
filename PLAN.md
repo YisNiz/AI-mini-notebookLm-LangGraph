@@ -24,14 +24,14 @@
 - [x] 1.8 לולאת writer→critic (critique_script, revise)
 - [x] 1.9 LangSmith — תצפית על הגרף
 
-## מודול 2 — הרצאת TED: אישור אנושי, עמידות וקול   [~]   (ענף: feature/ted-approval)
+## מודול 2 — הרצאת TED: אישור אנושי, עמידות וקול   [x]   (ענף: feature/ted-approval)
 - [x] 2.1 interrupt() ואישור אנושי
 - [x] 2.2 checkpointing (SqliteSaver)
 - [x] 2.3 שכבת TTS (Protocol וספק ElevenLabs)
 - [x] 2.4 מסלול נטפרי: שירות TTS ב-Cloud Run עם מסירה לדרייב (רשות)
 - [x] 2.5 synthesize_audio בגרף וסמנטיקת ה-retry של resume
 - [x] 2.6 ted_jobs — הרעיון (מונחה) והמימוש (אוטומטי) 🧠+⚙️
-- [ ] 2.7 LangGraph Studio
+- [x] 2.7 LangGraph Studio
 
 ## מודול 3 — פודקאסט: צינור התסריט ואכיפת האורך   [ ]   (ענף: feature/podcast-script)
 - [ ] 3.1 עיצוב בניגוד ל-TED והתוכנית לפני הקוד

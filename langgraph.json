@@ -1,0 +1,7 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "ted": "./src/studio.py:build_ted_graph_for_server"
+  },
+  "env": ".env"
+}

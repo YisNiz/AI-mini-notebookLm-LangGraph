@@ -37,3 +37,9 @@ def build_ted_graph(checkpointer=None):
     builder.add_edge("synthesize_audio", END)
 
     return builder.compile(checkpointer=checkpointer)
+
+
+def build_ted_graph_for_server():
+    """Zero-arg factory for langgraph dev/Studio, which injects values into any
+    recognized parameter (e.g. checkpointer) and provides its own persistence."""
+    return build_ted_graph()
