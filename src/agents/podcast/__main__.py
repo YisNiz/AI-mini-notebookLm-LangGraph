@@ -10,14 +10,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from core.store import store
-from agents.podcast.graph import build_podcast_graph
+from agents.podcast.graphs.script_graph import build_script_graph
 
 for arg in sys.argv[1:]:
     path = Path(arg)
     store.add(name=path.name, content=path.read_text(encoding="utf-8"))
     print(f"loaded source: {path.name}")
 
-graph = build_podcast_graph()
+graph = build_script_graph()
 final_state = None
 for mode, chunk in graph.stream(
     {"job_id": "test"},
@@ -46,3 +46,7 @@ print(json.dumps([n.model_dump() for n in sorted(result.get("research", []), key
 print("--- script ---")
 for turn in result.get("turns") or []:
     print(f"{turn.speaker_name}: {turn.text_he}")
+if result.get("critique"):
+    print("--- critique ---")
+    print("approved:", result["critique"].approved, "| revisions:", result.get("revision_count", 0))
+    print(json.dumps(result["critique"].issues, indent=2, ensure_ascii=False))

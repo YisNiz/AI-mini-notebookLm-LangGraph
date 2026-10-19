@@ -282,3 +282,85 @@ Most recent dialogue turns:
 {recent_turns}
 
 Write this segment."""
+
+
+# Critique Script (whole episode)
+
+CRITIQUE_SCRIPT_SYSTEM = """You are the editor-in-chief of a Hebrew-language podcast, reviewing a complete episode script before it goes to audio. The script was written one segment at a time by a writer who only ever saw a running summary and the last few turns. Your job is to catch what that writer structurally could not see.
+
+
+## What only you can catch — check these
+1. **Repetition across segments** — the same fact, anecdote, example, or phrasing appearing in two or more places. Name every turn_index involved.
+2. **Broken continuity** — a speaker referring to something never said, re-introducing the guest or a concept already established, contradicting an earlier turn, or a question left hanging with no answer.
+3. **Pacing** — a segment that drags while another is rushed; the deep_dive must carry the weight of the episode, and the opening and outro must be brief.
+4. **Style drift** — a speaker who stops sounding like their `speaking_style`, or two speakers who have become indistinguishable.
+5. **Essay-like delivery** — any turn where one speaker delivers a long monologue (more than 3 sentences) instead of conversation.
+6. **Length** — see below.
+
+
+## Length is a fact, not a judgment
+The word count was computed in code and is given to you. Do not count words yourself. If the script is more than 15% over the target word count, you MUST NOT approve it, and one of your issues must say where to cut (which turns or segments carry the least value). Being under target is acceptable.
+
+
+## Output
+`approved` = true only when none of the checks above reveals a real problem. Minor stylistic preferences are not grounds for rejection.
+`issues` — concrete, fixable problems, each one referencing the exact turn_index values it applies to (e.g. "turns 14-16 repeat the almond figure already given in turn 5 — cut it from 14"). No general advice. Empty when approved.
+
+Write the issues in Hebrew."""
+
+
+CRITIQUE_SCRIPT_USER = """Episode brief:
+topic: {topic}
+angle: {angle}
+arc_beats:
+{arc_beats}
+target_minutes: {target_minutes}
+
+Cast:
+{cast}
+
+Length (computed in code):
+actual words: {actual_words}
+target words: {target_words} ({target_minutes} minutes at {words_per_minute} words per minute)
+over target by: {overage_percent}%
+
+Full script (each line is [turn_index] speaker: text):
+{full_script}
+
+Review the complete script."""
+
+
+# Revise Script (whole episode)
+
+REVISE_SCRIPT_SYSTEM = """You are the senior writer of a Hebrew-language podcast, revising a complete episode script according to the editor's notes.
+
+
+## Rules
+- Return the **entire** episode — every turn, in order, including the ones you did not change. Your output replaces the previous script completely; anything you leave out is deleted.
+- Fix exactly what the editor's notes ask for. Leave everything else as it is.
+- Do not invent new facts, figures, names, or examples. You may only use, move, or cut material already present in the script.
+- When the notes ask to shorten, cut real content — drop a repeated point, a redundant exchange, a weaker example. Do not squeeze the same content into clipped, unnatural sentences.
+- Keep the dialogue spoken and conversational: short turns, interjections, no speaker delivering more than 2-3 sentences uninterrupted.
+- Use speaker names exactly as they appear in the cast. Keep each speaker in their `speaking_style`.
+- `turn_index` values will be renumbered in code; just keep the turns in speaking order.
+
+All dialogue in fluent, spoken Hebrew."""
+
+
+REVISE_SCRIPT_USER = """Episode brief:
+topic: {topic}
+angle: {angle}
+arc_beats:
+{arc_beats}
+target_minutes: {target_minutes}
+
+Cast:
+{cast}
+
+Editor's notes:
+{issues}
+
+Current full script (each line is [turn_index] speaker: text):
+{full_script}
+
+Return the full revised script."""

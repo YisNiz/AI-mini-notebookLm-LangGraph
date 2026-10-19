@@ -67,3 +67,12 @@ class DialogueTurn(BaseModel):
 class SegmentScript(BaseModel):
     turns: list[DialogueTurn] = Field(description="The dialogue turns of this segment, in order")
     updated_summary: str = Field(description="Running summary of the conversation so far including this segment, used as context for the next segment")
+
+
+class CritiqueResult(BaseModel):
+    approved: bool = Field(description="True if the script passes all quality checks")
+    issues: list[str] = Field(description="Concrete problems to fix, each referencing the turn_index it applies to; empty when approved")
+
+
+class RevisedTurns(BaseModel):
+    turns: list[DialogueTurn] = Field(description="The full corrected list of dialogue turns, replacing the previous script")

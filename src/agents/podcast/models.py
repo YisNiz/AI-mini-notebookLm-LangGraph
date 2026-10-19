@@ -6,6 +6,7 @@ MODELS = {
     "planning": "anthropic:claude-haiku-5-5",   # plan_topic, design_personas, plan_lineup
     "context": "anthropic:claude-haiku-5-5",    # gather_context
     "writing": "anthropic:claude-sonnet-5-5",   # write_segment
+    "critique": "anthropic:claude-sonnet-5-5",  # critique_script, revise_script
 }
 
 

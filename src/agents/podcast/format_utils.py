@@ -57,3 +57,13 @@ def format_recent_turns(turns: list) -> str:
     if not turns:
         return "No previous dialogue turns."
     return "\n".join(f"{turn.speaker_name}: {turn.text_he}" for turn in turns)
+
+
+def format_full_script(turns: list) -> str:
+    """Render the whole script with turn_index, so the critic can point at exact turns."""
+    if not turns:
+        return "No turns."
+    return "\n".join(
+        f"[{turn.turn_index}] {turn.speaker_name}: {turn.text_he}"
+        for turn in turns
+    )

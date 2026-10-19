@@ -1,7 +1,7 @@
 import operator
 from typing import Annotated, TypedDict
 
-from agents.podcast.schemas import DialogueTurn, LineupItem, PodcastCast, ResearchNote, TopicBrief
+from agents.podcast.schemas import CritiqueResult, DialogueTurn, LineupItem, PodcastCast, ResearchNote, TopicBrief
 
 
 class PodcastState(TypedDict, total=False):
@@ -20,6 +20,9 @@ class PodcastState(TypedDict, total=False):
     current_segment: int
     turns: list[DialogueTurn]
     running_summary: str
+    # step 6-7 — critique_script / revise_script loop over the whole episode
+    critique: CritiqueResult | None
+    revision_count: int
 
 
 class GatherInput(TypedDict):
