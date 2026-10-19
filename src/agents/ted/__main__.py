@@ -8,28 +8,18 @@ unstrict_ssl()
 from dotenv import load_dotenv
 load_dotenv()
 
-from langgraph.checkpoint.memory import InMemorySaver
-from langgraph.types import Command
-
 from core.store import store
-from agents.ted.graph import build_ted_graph
+from agents.ted import run_resume, run_start
+
+JOB_ID = "test"
 
 for arg in sys.argv[1:]:
     path = Path(arg)
     store.add(name=path.name, content=path.read_text(encoding="utf-8"))
     print(f"loaded source: {path.name}")
 
-graph = build_ted_graph(checkpointer=InMemorySaver())
-config = {
-    "configurable": {"thread_id": "test"},
-    "recursion_limit": 25,
-    "run_name": "ted-talk",
-    "metadata": {"job_id": "test"},
-}
-
-result = graph.invoke({"job_id": "test"}, config)
-while result.get("__interrupt__"):
-    payload = result["__interrupt__"][0].value
+payload = run_start(JOB_ID)
+while payload:
     print(payload["script_he"])
     print(f"\n({payload['word_count']} מילים, {payload['revision_count']} תיקונים)")
     if payload["critique_notes"]:
@@ -41,6 +31,7 @@ while result.get("__interrupt__"):
     else:
         resume = {"action": "revise", "feedback": answer}
 
-    result = graph.invoke(Command(resume=resume), config)
+    result = run_resume(JOB_ID, resume)
+    payload = result["__interrupt__"][0].value if result.get("__interrupt__") else None
 
 print("ההרצאה אושרה — הגרף הסתיים.")

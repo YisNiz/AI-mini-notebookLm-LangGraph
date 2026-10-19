@@ -12,3 +12,6 @@ mcp.json
 # Local data
 *.db
 *.sqlite
+
+# Local databases
+data/
