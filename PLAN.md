@@ -17,7 +17,7 @@
 - [x] 1.1 התוכנית לפני הקוד
 - [x] 1.2 הסכמות (TalkBrief, CritiqueResult)
 - [x] 1.3 מודלים ופרומפטים (models.py, prompts.py)
-- [ ] 1.4 ה-state וקבועי האורך (state.py)
+- [x] 1.4 ה-state וקבועי האורך (state.py)
 - [ ] 1.5 node ראשון והרצה ראשונה (plan_talk) 🧠+⚙️
 - [ ] 1.6 מחקר בלי LLM וכתיבה חופשית (gather_context, write_talk)
 - [ ] 1.7 אכיפה בקוד (count_words)
