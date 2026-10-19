@@ -8,6 +8,7 @@ from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_cohere import CohereEmbeddings
 from langchain_core.documents import Document
 
+from agents.summarize import summarize
 from core.sources import chunk_source
 
 EMBEDDINGS_MODEL = CohereEmbeddings(
@@ -21,6 +22,7 @@ class Source:
     name: str
     content: str
     active: bool = True
+    summary: str | None = None
 
 
 @dataclass
@@ -45,6 +47,7 @@ class SourceStore:
             id=uuid.uuid4().hex[:8],
             name=name,
             content=content,
+            summary=summarize(name, content),
         )
 
         self._sources[source.id] = source

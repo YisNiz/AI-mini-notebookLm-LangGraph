@@ -1,5 +1,12 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+if TYPE_CHECKING:
+    from core.store import SourceStore
 
 
 def chunk_source(source_id: str, name: str, content: str) -> list[Document]:
@@ -28,3 +35,13 @@ def format_docs(docs: list[Document]) -> str:
 
     return "\n\n".join(blocks)
 
+
+
+def build_sources_overview(store: SourceStore) -> str:
+    parts = []
+    for source in store.list():
+        if not source.active:
+            continue
+        summary = source.summary or source.content[:500]
+        parts.append(f"### {source.name}\n{summary}")
+    return "\n\n".join(parts)
