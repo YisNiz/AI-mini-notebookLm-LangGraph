@@ -11,4 +11,6 @@ MODELS = {
 
 @lru_cache
 def get_model(role: str):
-    return init_chat_model(MODELS[role])
+    # The lineup and full-episode outputs are long Hebrew JSON/prose; the
+    # provider's default output cap truncates them mid-object.
+    return init_chat_model(MODELS[role], max_tokens=16000)
