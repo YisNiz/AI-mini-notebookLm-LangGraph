@@ -292,17 +292,36 @@ async function loadArtifacts() {
     const badge = a.status === "planned" ? `<span class="a-badge">Soon</span>` : "";
     btn.innerHTML = `<span class="a-icon">${a.icon}</span>
       <span class="a-title">${escapeHtml(a.title)}</span>${badge}`;
-    btn.onclick = () => generateArtifact(a);
+    btn.onclick = () => generateArtifact(a, btn);
     grid.appendChild(btn);
   }
 }
 
-async function generateArtifact(a) {
+async function generateArtifact(a, btn) {
   if (a.key === "ted") return startTed();
+  if (btn?.disabled) return;
+  const title = btn?.querySelector(".a-title");
+  const icon = btn?.querySelector(".a-icon");
+  if (btn) {
+    btn.disabled = true;
+    title.textContent = `${a.title}…`;
+    icon.textContent = "⏳";
+  }
+  if (a.key === "podcast") {
+    addMessage("system", "🎙️ מפיקה פודקאסט מהמקורות הפעילים… (תכנון, מחקר, כתיבה וביקורת — כמה דקות)");
+  }
   try {
-    await api.send("POST", "/api/studio/generate", { kind: a.key });
+    const note = await api.send("POST", "/api/studio/generate", { kind: a.key });
+    await loadNotes();
+    if (note) openNote(note);
   } catch (e) {
     addMessage("system", `⚠ ${e.message}`);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      title.textContent = a.title;
+      icon.textContent = a.icon;
+    }
   }
 }
 
@@ -325,7 +344,7 @@ function renderNotes(notes) {
       await api.send("DELETE", `/api/notes/${n.id}`);
       loadNotes();
     };
-    li.querySelector(".n-title").onclick = () => openViewer(n.title, n.content);
+    li.querySelector(".n-title").onclick = () => openNote(n);
     ul.appendChild(li);
   }
 }
@@ -454,8 +473,25 @@ function closeTed() {
 function openViewer(title, content) {
   $("viewer-title").textContent = title;
   $("viewer-content").textContent = content;
+  $("viewer-content").classList.remove("dialogue");
   $("viewer").classList.remove("hidden");
   $("overlay").classList.remove("hidden");
+}
+
+// A dialogue note (podcast script) renders as "speaker: line" rows.
+function openNote(n) {
+  if (n.content_type !== "dialogue" || !n.dialogue?.length) return openViewer(n.title, n.content);
+  openViewer(n.title, "");
+  const box = $("viewer-content");
+  box.classList.add("dialogue");
+  box.innerHTML = n.dialogue
+    .map(
+      (l) =>
+        `<div class="dl-line" dir="rtl"><span class="dl-speaker">${escapeHtml(
+          l.speaker_name
+        )}:</span> ${escapeHtml(l.text)}</div>`
+    )
+    .join("");
 }
 function closeViewer() {
   $("viewer").classList.add("hidden");

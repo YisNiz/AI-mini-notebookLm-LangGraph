@@ -10,31 +10,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from core.store import store
-from agents.podcast.graphs.script_graph import build_script_graph
+from agents.podcast import run
 
 for arg in sys.argv[1:]:
     path = Path(arg)
     store.add(name=path.name, content=path.read_text(encoding="utf-8"))
     print(f"loaded source: {path.name}")
 
-graph = build_script_graph()
-final_state = None
-for mode, chunk in graph.stream(
-    {"job_id": "test"},
-    config={
-        "recursion_limit": 60,
-        "max_concurrency": 2,
-        "run_name": "podcast-script",
-        "metadata": {"job_id": "test"},
-    },
-    stream_mode=["updates", "values"],
-):
-    if mode == "updates":
-        for node in chunk:
-            print(f">>> {node} done")
-    else:
-        final_state = chunk
-result = final_state
+result = run(job_id="test")
 
 for key in ("brief", "cast"):
     print(f"--- {key} ---")

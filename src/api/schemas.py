@@ -98,10 +98,17 @@ class GenerateArtifactRequest(BaseModel):
 # -- notes ---------------------------------------------------------------------
 
 
+class DialogueLine(BaseModel):
+    speaker_name: str
+    text: str
+
+
 class Note(BaseModel):
     id: str
     title: str
     content: str
+    content_type: Literal["text", "dialogue"] = "text"
+    dialogue: list[DialogueLine] = Field(default_factory=list)
 
 
 class AddNoteRequest(BaseModel):

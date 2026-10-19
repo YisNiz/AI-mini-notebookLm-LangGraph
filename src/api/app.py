@@ -201,6 +201,8 @@ def studio_generate(req: dict) -> Note:
         return services.generate_artifact(req.get("kind", ""), req.get("impl", "A"))
     except services.ComingSoon as exc:
         raise HTTPException(status_code=501, detail=str(exc)) from exc
+    except services.GenerationError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 # -- notes ---------------------------------------------------------------------

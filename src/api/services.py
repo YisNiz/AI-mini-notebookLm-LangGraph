@@ -15,6 +15,7 @@ from api.schemas import (
     ChatRequest,
     TedTalk,
     ChatResponse,
+    DialogueLine,
     Citation,
     Note,
     PendingAction,
@@ -22,6 +23,7 @@ from api.schemas import (
     SourceInfo,
 )
 from agents import chat
+from agents import podcast as podcast_agent
 from agents import ted
 from core import ted_jobs
 from core.store import store
@@ -29,6 +31,10 @@ from core.store import store
 
 class ComingSoon(Exception):
     """Raised for a product capability that is advertised but not wired up yet."""
+
+
+class GenerationError(Exception):
+    """Raised when an artifact can't be generated; the message tells the user what to do."""
 
 
 # -- sources -------------------------------------------------------------------
@@ -117,6 +123,7 @@ def run_chat(req: ChatRequest) -> ChatResponse:
 
 ARTIFACTS: list[ArtifactKind] = [
     ArtifactKind(key="ted", title="TED Talk", icon="🎤", status="ready"),
+    ArtifactKind(key="podcast", title="Podcast", icon="🎙️", status="ready"),
     ArtifactKind(key="infographic", title="Infographic", icon="📊", status="planned"),
     ArtifactKind(key="powerpoint", title="PowerPoint", icon="📑", status="planned"),
     ArtifactKind(key="summary", title="Summary", icon="📄", status="planned"),
@@ -131,10 +138,37 @@ def list_artifacts() -> list[ArtifactKind]:
 
 
 def generate_artifact(kind: str, impl: str) -> Note:
+    if kind == "podcast":
+        return _generate_podcast()
     # Artifact generation lands with structured output; until then it's "coming soon".
     artifact = _ARTIFACTS_BY_KEY.get(kind)
     title = artifact.title if artifact else "This artifact"
     raise ComingSoon(f"{title} generation is coming soon.")
+
+
+def _generate_podcast() -> Note:
+    """Run the podcast script graph synchronously and turn the result into a
+    dialogue note. Naive on purpose: no persistence, no approval (module 4)."""
+    if not store.active_ids():
+        raise GenerationError("No active sources. Enable at least one source to generate a podcast.")
+
+    result = podcast_agent.run(job_id=uuid.uuid4().hex[:8])
+    turns = (result or {}).get("turns") or []
+    if not turns:
+        raise GenerationError("The podcast came back empty. Please try again.")
+
+    lines = [DialogueLine(speaker_name=t.speaker_name, text=t.text_he) for t in turns]
+    title = f"🎙️ {result['brief'].topic}"[:80]
+    content = "\n\n".join(f"{line.speaker_name}: {line.text}" for line in lines)
+    note = Note(
+        id=uuid.uuid4().hex[:8],
+        title=title,
+        content=content,
+        content_type="dialogue",
+        dialogue=lines,
+    )
+    _NOTES[note.id] = note
+    return note
 
 
 # -- notes ---------------------------------------------------------------------
