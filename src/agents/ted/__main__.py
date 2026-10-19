@@ -34,4 +34,4 @@ while payload:
     result = run_resume(JOB_ID, resume)
     payload = result["__interrupt__"][0].value if result.get("__interrupt__") else None
 
-print("ההרצאה אושרה — הגרף הסתיים.")
+print("ההרצאה אושרה — האודיו נשמר ב:", result.get("audio_path"))

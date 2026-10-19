@@ -1,8 +1,12 @@
+import os
 import re
 
 from langgraph.types import interrupt
+from pydub import AudioSegment as PydubSegment
 
+from agents.ted.checkpoint import DATA_DIR
 from agents.ted.models import get_model
+from agents.ted.tts import get_provider
 from agents.ted.prompts import (
     CRITIQUE_SYSTEM,
     CRITIQUE_USER,
@@ -178,4 +182,47 @@ def approval(state: TedState) -> dict:
 
 
 def after_approval(state: TedState) -> str:
-    return "revise" if state.get("human_feedback") else "done"
+    return "revise" if state.get("human_feedback") else "synthesize_audio"
+
+
+TED_DIR = DATA_DIR / "ted"
+
+# ElevenLabs recommends keeping each generation under ~800-900 characters.
+MAX_CHUNK_CHARS = 800
+
+
+def _chunk_script(script: str, max_chars: int = MAX_CHUNK_CHARS) -> list[str]:
+    """Group consecutive sentences into chunks of up to max_chars."""
+    chunks, current = [], ""
+    for sentence in _sentences(script):
+        if current and len(current) + len(sentence) + 1 > max_chars:
+            chunks.append(current)
+            current = ""
+        current = f"{current} {sentence}".strip()
+    if current:
+        chunks.append(current)
+    return chunks
+
+
+def synthesize_audio(state: TedState) -> dict:
+    """TTS: single speaker, chunked by sentences, concatenated into talk.mp3."""
+    voice_id = os.getenv("TED_VOICE_ID")
+    if not voice_id:
+        raise ValueError("Set TED_VOICE_ID to synthesize the talk.")
+
+    out_dir = TED_DIR / state["job_id"]
+    out_dir.mkdir(parents=True, exist_ok=True)
+    provider = get_provider()
+
+    chunk_paths = []
+    for i, chunk in enumerate(_chunk_script(state["script_he"])):
+        path = out_dir / f"chunk_{i:03}.mp3"
+        provider.synthesize_dialogue([(chunk, voice_id)], path)
+        chunk_paths.append(path)
+
+    talk = PydubSegment.empty()
+    for path in chunk_paths:
+        talk += PydubSegment.from_mp3(path) + PydubSegment.silent(duration=200)
+    talk_path = out_dir / "talk.mp3"
+    talk.export(talk_path, format="mp3")
+    return {"audio_path": str(talk_path)}

@@ -32,8 +32,19 @@ def run_start(job_id: str) -> dict:
 
 
 def run_resume(job_id: str, resume: dict) -> dict:
-    """Resume a paused talk with the user's decision."""
-    return _graph().invoke(Command(resume=resume), _config(job_id))
+    """Resume a paused talk with the user's decision.
+
+    Returns the graph's result dict: it contains "__interrupt__" when the talk
+    is back at the approval gate (after a revision), or "audio_path" when it
+    ran through to END.
+    """
+    graph = _graph()
+    config = _config(job_id)
+    if "approval" in graph.get_state(config).next:
+        return graph.invoke(Command(resume=resume), config)
+    # A previous approve already consumed the interrupt but crashed in
+    # synthesize_audio; invoking with no input retries the pending node.
+    return graph.invoke(None, config)
 
 
 def get_values(job_id: str) -> dict:
