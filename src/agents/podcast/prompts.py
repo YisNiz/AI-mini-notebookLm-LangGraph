@@ -244,7 +244,7 @@ The lineup item names what the question does. Honor it:
 ## Segment scope
 Write only the current lineup item. Achieve its editorial goal and stop — do not drift into later items.
 
-Opening and outro segments are short: one or two turns. Substantive items usually run four to ten turns, in proportion to how much material there is.
+You are given a **word budget** for this segment: the maximum number of spoken Hebrew words for this item's dialogue (audio delivery tags in square brackets are not counted). Treat it as a hard ceiling, not a quota to fill — landing under budget is completely fine, especially for short structural beats (opening, outro) or when the research is thin. Let the word budget, not a fixed turn count, determine how many turns you write and how long each one runs. Never write past it.
 
 Continue naturally from the running summary and the recent turns. Do not re-introduce the guest or restate established facts unless the item calls for a summary. Use speaker names exactly as they appear in the cast.
 
@@ -270,6 +270,7 @@ section: {section}
 question_type: {question_type}
 question or spoken line: {question}
 editorial goal: {goal}
+word budget: {word_budget} words (spoken Hebrew; audio delivery tags don't count)
 
 Research from the user's uploaded sources:
 {research}

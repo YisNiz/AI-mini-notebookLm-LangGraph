@@ -12,6 +12,27 @@ from core.store import store
 from core.sources import build_sources_overview
 
 
+MIN_TARGET_MINUTES = 3
+MAX_TARGET_MINUTES = 10
+
+
+def _clamp_target_minutes(brief: TopicBrief) -> TopicBrief:
+    """
+    plan_topic's target_minutes is model-decided and only "guided" to stay
+    <=10 by prompt text — nothing enforces it. Clamp it in code so every
+    downstream stage (persona/lineup prompts, per-segment word budgets in
+    writing.py) is built on a trustworthy number.
+    """
+    clamped = max(MIN_TARGET_MINUTES, min(MAX_TARGET_MINUTES, brief.target_minutes))
+    if clamped != brief.target_minutes:
+        print(
+            f"[podcast] plan_topic returned target_minutes={brief.target_minutes}, "
+            f"clamped to {clamped}"
+        )
+        return brief.model_copy(update={"target_minutes": clamped})
+    return brief
+
+
 def plan_topic(state: PodcastState):
     """Step 1: Plan the episode topic and narrative arc."""
     overview = build_sources_overview(store)
@@ -24,6 +45,7 @@ def plan_topic(state: PodcastState):
         {"role": "system", "content": PLAN_TOPIC_SYSTEM},
         {"role": "user", "content": PLAN_TOPIC_USER.format(source_overview=overview)},
     ])
+    brief = _clamp_target_minutes(brief)
     return {"source_overview": overview, "brief": brief}
 
 

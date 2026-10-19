@@ -1,4 +1,18 @@
+import re
+
 from agents.podcast.schemas import PodcastCast, ResearchNote
+
+_AUDIO_TAG_RE = re.compile(r"\[[^\]]{1,40}\]\s*")
+
+
+def strip_audio_tags(text: str) -> str:
+    """Remove ElevenLabs v3 delivery tags like [thoughtful] for user-facing display."""
+    return _AUDIO_TAG_RE.sub("", text).strip()
+
+
+def count_words_he(text: str) -> int:
+    """Count spoken words in a Hebrew turn, excluding audio delivery tags."""
+    return len(strip_audio_tags(text).split())
 
 
 def format_cast(cast: PodcastCast) -> str:
