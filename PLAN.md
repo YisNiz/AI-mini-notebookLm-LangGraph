@@ -30,7 +30,7 @@
 - [x] 2.3 שכבת TTS (Protocol וספק ElevenLabs)
 - [x] 2.4 מסלול נטפרי: שירות TTS ב-Cloud Run עם מסירה לדרייב (רשות)
 - [x] 2.5 synthesize_audio בגרף וסמנטיקת ה-retry של resume
-- [ ] 2.6 ted_jobs — הרעיון (מונחה) והמימוש (אוטומטי) 🧠+⚙️
+- [x] 2.6 ted_jobs — הרעיון (מונחה) והמימוש (אוטומטי) 🧠+⚙️
 - [ ] 2.7 LangGraph Studio
 
 ## מודול 3 — פודקאסט: צינור התסריט ואכיפת האורך   [ ]   (ענף: feature/podcast-script)
