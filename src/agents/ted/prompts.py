@@ -45,3 +45,56 @@ Relevant passages from the sources:
 {context}
 
 Write the full script."""
+
+
+CRITIQUE_SYSTEM = """You are an editor-in-chief reviewing a Hebrew TED talk script before it is shown to the user.
+
+The word count was computed in code and is given to you as a fact — do not count by yourself. The valid range is {word_min} to {word_max} words.
+
+Check:
+1. Length: is the word count within the valid range.
+2. Opening: does the talk open with a real hook, not a generic statement.
+3. Structure: are the three key points developed in a clear order, and is there a closing.
+4. Language: spoken Hebrew that sounds good read aloud, with no headings or stage directions.
+
+passed=true only if all checks pass. Otherwise return in issues concrete, fixable problems — not general style remarks. Write the issues in Hebrew."""
+
+CRITIQUE_USER = """Talk plan:
+Topic: {topic}
+Hook: {hook}
+Key points:
+{key_points}
+
+Word count (computed in code): {word_count}
+
+The script:
+
+{script}
+
+Review the script."""
+
+
+REVISE_SYSTEM = """You are a speechwriter revising an existing Hebrew TED talk script according to review notes.
+
+Word budget: the target is {target_words} words, and in any case between {word_min} and {word_max} words. This is a hard budget.
+
+Fix only what the notes ask for and keep the rest of the script. If there is feedback from the user, it takes precedence over any other note.
+The original writing rules still apply: spoken Hebrew, facts only from the sources, continuous prose with no headings.
+
+Return the full revised script only, in Hebrew, with no preamble or explanations."""
+
+REVISE_USER = """The current script ({word_count} words):
+
+{script}
+
+Editor's notes:
+{issues}
+
+Feedback from the user:
+{human_feedback}
+
+Relevant passages from the sources:
+
+{context}
+
+Write the revised version."""

@@ -1,6 +1,9 @@
 from langgraph.graph import StateGraph, START, END
 
-from agents.ted.nodes import plan_talk, gather_context, write_talk, count_words
+from agents.ted.nodes import (
+    plan_talk, gather_context, write_talk, count_words,
+    critique_script, revise, after_critique,
+)
 from agents.ted.state import TedState
 
 
@@ -10,11 +13,17 @@ def build_ted_graph():
     builder.add_node("gather_context", gather_context)
     builder.add_node("write_talk", write_talk)
     builder.add_node("count_words", count_words)
+    builder.add_node("critique_script", critique_script)
+    builder.add_node("revise", revise)
 
     builder.add_edge(START, "plan_talk")
     builder.add_edge("plan_talk", "gather_context")
     builder.add_edge("gather_context", "write_talk")
     builder.add_edge("write_talk", "count_words")
-    builder.add_edge("count_words", END)
+    builder.add_edge("count_words", "critique_script")
+    builder.add_conditional_edges(
+        "critique_script", after_critique, {"approval": END, "revise": "revise"}
+    )
+    builder.add_edge("revise", "count_words")
 
     return builder.compile()

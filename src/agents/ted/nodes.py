@@ -2,13 +2,17 @@ import re
 
 from agents.ted.models import get_model
 from agents.ted.prompts import (
+    CRITIQUE_SYSTEM,
+    CRITIQUE_USER,
     PLAN_TALK_SYSTEM,
     PLAN_TALK_USER,
+    REVISE_SYSTEM,
+    REVISE_USER,
     WRITE_TALK_SYSTEM,
     WRITE_TALK_USER,
 )
-from agents.ted.schemas import TalkBrief
-from agents.ted.state import HARD_CAP, TARGET_WORDS, WORD_MAX, WORD_MIN, TedState
+from agents.ted.schemas import CritiqueResult, TalkBrief
+from agents.ted.state import HARD_CAP, MAX_REVISIONS, TARGET_WORDS, WORD_MAX, WORD_MIN, TedState
 
 from core.store import store
 from core.sources import build_sources_overview, format_docs
@@ -20,7 +24,7 @@ def plan_talk(state: TedState) -> dict:
     if not overview.strip():
         raise ValueError("No active sources to plan a talk from. Enable at least one source first.")
 
-    llm = get_model("planning").with_structured_output(TalkBrief)
+    llm = get_model("planning").with_structured_output(TalkBrief, method="json_schema")
     brief = llm.invoke([
         {"role": "system", "content": PLAN_TALK_SYSTEM},
         {"role": "user", "content": PLAN_TALK_USER.format(source_overview=overview)},
@@ -86,3 +90,65 @@ def count_words(state: TedState) -> dict:
         used += n
     trimmed = " ".join(kept)
     return {"script_he": trimmed, "word_count": len(trimmed.split())}
+
+
+def critique_script(state: TedState) -> dict:
+    """LLM judge: passed/issues. It receives the word count computed in code —
+    it does not count by itself."""
+    brief = state["brief"]
+    llm = get_model("critique").with_structured_output(CritiqueResult, method="json_schema")
+    result = llm.invoke([
+        {
+            "role": "system",
+            "content": CRITIQUE_SYSTEM.format(word_min=WORD_MIN, word_max=WORD_MAX),
+        },
+        {
+            "role": "user",
+            "content": CRITIQUE_USER.format(
+                topic=brief.topic,
+                hook=brief.hook,
+                key_points="\n".join(f"- {p}" for p in brief.key_points),
+                word_count=state["word_count"],
+                script=state["script_he"],
+            ),
+        },
+    ])
+    return {"critique": result}
+
+
+# router
+def after_critique(state: TedState) -> str:
+    """passed, or out of revision budget → done. Otherwise revise."""
+    if state["critique"].passed or state["revision_count"] >= MAX_REVISIONS:
+        return "approval"
+    return "revise"
+
+
+def revise(state: TedState) -> dict:
+    """LLM: rewrite the script per the critique issues."""
+    critique = state.get("critique")
+    issues = "\n".join(f"- {issue}" for issue in critique.issues) if critique and critique.issues else "None"
+
+    llm = get_model("writing")
+    response = llm.invoke([
+        {
+            "role": "system",
+            "content": REVISE_SYSTEM.format(
+                target_words=TARGET_WORDS, word_min=WORD_MIN, word_max=WORD_MAX
+            ),
+        },
+        {
+            "role": "user",
+            "content": REVISE_USER.format(
+                script=state["script_he"],
+                word_count=state["word_count"],
+                issues=issues,
+                human_feedback="None",
+                context=state["context"],
+            ),
+        },
+    ])
+    return {
+        "script_he": response.text.strip(),
+        "revision_count": state["revision_count"] + 1,
+    }

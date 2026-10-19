@@ -21,7 +21,7 @@
 - [x] 1.5 node ראשון והרצה ראשונה (plan_talk) 🧠+⚙️
 - [x] 1.6 מחקר בלי LLM וכתיבה חופשית (gather_context, write_talk)
 - [x] 1.7 אכיפה בקוד (count_words)
-- [ ] 1.8 לולאת writer→critic (critique_script, revise)
+- [x] 1.8 לולאת writer→critic (critique_script, revise)
 - [ ] 1.9 LangSmith — תצפית על הגרף
 
 ## מודול 2 — הרצאת TED: אישור אנושי, עמידות וקול   [ ]   (ענף: feature/ted-approval)
