@@ -11,10 +11,12 @@ import uuid
 
 from api.schemas import (
     ArtifactKind,
+    ChatDecisionRequest,
     ChatRequest,
     ChatResponse,
     Citation,
     Note,
+    PendingAction,
     SourceDetail,
     SourceInfo,
 )
@@ -74,18 +76,38 @@ def _auto_name(content: str) -> str:
 
 # -- chat ----------------------------------------------------------------------
 
-
 def run_chat(req: ChatRequest) -> ChatResponse:
-    """Answer a chat turn with the stage-2 agent, grounded in the active sources."""
-    if not store.active_ids():
+    result = chat.answer(
+        req.message,
+        thread_id=req.thread_id or "default",
+    )
+
+    if result.get("pending_approval"):
+        interrupt = result.get("interrupt") or {}
+        requests = interrupt.get("action_requests", [])
+
         return ChatResponse(
-            answer="No active sources. Enable at least one source on the left to chat.",
+            answer="הסוכן ממתין לאישור שלך לסריקת המקור.",
+            pending_approval=True,
+            pending_actions=[
+                PendingAction(
+                    name=action.get("name", ""),
+                    url=action.get("args", {}).get(
+                        "url",
+                        action.get("url", ""),), 
+                   description=action.get("description", ""),
+                )
+                for action in requests
+            ],
+            thread_id=result.get("thread_id"),
             engine="chat",
         )
 
-    result = chat.answer(req.message, thread_id=req.thread_id or "default")
-    citations = [Citation(source=name) for name in result.sources]
-    return ChatResponse(answer=result.text, citations=citations, engine="chat")
+    return ChatResponse(
+        answer=result.get("text", ""),
+        thread_id=result.get("thread_id"),
+        engine="chat",
+    )
 
 
 # -- studio (artifacts) --------------------------------------------------------
@@ -128,3 +150,41 @@ def add_note(title: str, content: str) -> Note:
 
 def remove_note(note_id: str) -> bool:
     return _NOTES.pop(note_id, None) is not None
+
+
+def run_chat_decision(req: ChatDecisionRequest) -> ChatResponse:
+    result = chat.resume(
+        thread_id=req.thread_id,
+        decisions=[
+            {"type": decision}
+            for decision in req.decisions
+        ],
+    )
+
+    if result.get("pending_approval"):
+        interrupt = result.get("interrupt") or {}
+        requests = interrupt.get("action_requests", [])
+
+        return ChatResponse(
+            answer="הסוכן ממתין לאישור שלך לסריקת המקור.",
+            pending_approval=True,
+            pending_actions=[
+                PendingAction(
+                    name=action.get("name", ""),
+                    url=action.get("args", {}).get(
+                    "url",
+                    action.get("url", ""),
+                    ),
+                    description=action.get("description", ""),
+                )
+                for action in requests
+            ],
+            thread_id=result.get("thread_id"),
+            engine="chat",
+        )
+
+    return ChatResponse(
+        answer=result.get("text", ""),
+        thread_id=result.get("thread_id"),
+        engine="chat",
+    )

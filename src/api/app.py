@@ -38,6 +38,7 @@ from api.schemas import (
     AddNoteRequest,
     AddSourceRequest,
     ArtifactKind,
+    ChatDecisionRequest,
     ChatRequest,
     ChatResponse,
     Note,
@@ -123,6 +124,10 @@ def delete_source(source_id: str) -> dict[str, bool]:
 @app.post("/api/chat", response_model=ChatResponse)
 def chat(req: ChatRequest) -> ChatResponse:
     return services.run_chat(req)
+
+@app.post("/api/chat/decision", response_model=ChatResponse)
+def chat_decision(req: ChatDecisionRequest) -> ChatResponse:
+    return services.run_chat_decision(req)
 
 
 # -- studio --------------------------------------------------------------------

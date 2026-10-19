@@ -176,16 +176,101 @@ function decorateAnswer(div, data) {
   div.appendChild(actions);
 }
 
+function showPendingApproval(data) {
+  const message = addMessage(
+    "ai",
+    "הסוכן מבקש אישור לסריקת המקורות הבאים:"
+  );
+
+  const actions = data.pending_actions || [];
+
+  actions.forEach((action) => {
+    const item = document.createElement("div");
+    item.className = "meta";
+
+    const url = action.url || "(כתובת לא זמינה)";
+    item.textContent = `${action.name}: ${url}`;
+    message.appendChild(item);
+  });
+
+  const buttons = document.createElement("div");
+  buttons.className = "msg-actions";
+
+  const approve = document.createElement("button");
+  approve.className = "link-btn";
+  approve.textContent = "✓ אישור";
+  approve.onclick = () => submitDecision(
+    data.thread_id,
+    actions.length,
+    "approve",
+    buttons
+  );
+
+  const reject = document.createElement("button");
+  reject.className = "link-btn";
+  reject.textContent = "✕ דחייה";
+  reject.onclick = () => submitDecision(
+    data.thread_id,
+    actions.length,
+    "reject",
+    buttons
+  );
+
+  buttons.append(approve, reject);
+  message.appendChild(buttons);
+}
+
+async function submitDecision(threadId, count, decision, buttons) {
+  const controls = [...buttons.querySelectorAll("button")];
+
+  controls.forEach((button) => {
+    button.disabled = true;
+  });
+
+  try {
+    const data = await api.send("POST", "/api/chat/decision", {
+      thread_id: threadId,
+      decisions: Array(count).fill(decision),
+    });
+
+    buttons.remove();
+
+    if (data.pending_approval) {
+      showPendingApproval(data);
+    } else if (data.answer) {
+      const message = addMessage("ai", "");
+      decorateAnswer(message, data);
+    }
+  } catch (e) {
+    addMessage("system", `⚠ ${e.message}`);
+
+    controls.forEach((button) => {
+      button.disabled = false;
+    });
+  }
+}
+
+
+
 async function sendMessage(message) {
   addMessage("user", message);
   const pending = addMessage("ai", "thinking…", { pending: true });
   $("send").disabled = true;
+
   try {
     const data = await api.send("POST", "/api/chat", {
       message,
       thread_id: state.threadId,
     });
-    decorateAnswer(pending, data);
+
+    pending.remove();
+
+   if (data.pending_approval && data.pending_actions?.length) {
+  showPendingApproval(data);
+} else {
+  const answer = addMessage("ai", "");
+  decorateAnswer(answer, data);
+    }
   } catch (e) {
     pending.remove();
     addMessage("system", `⚠ ${e.message}`);

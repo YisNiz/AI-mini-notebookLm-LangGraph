@@ -58,10 +58,21 @@ class ChatRequest(BaseModel):
     message: str
     thread_id: str | None = None  # used from stage 4 (short-term memory)
 
+class PendingAction(BaseModel):
+    name: str
+    url: str
+    description: str
+
+
+class ChatDecisionRequest(BaseModel):
+    thread_id: str
+    decisions: list[Literal["approve", "reject"]]
 
 class ChatResponse(BaseModel):
     """The model's grounded answer plus the sources it was based on."""
-
+    pending_approval: bool = False
+    pending_actions: list[PendingAction] = Field(default_factory=list)
+    thread_id: str | None = None
     answer: str
     citations: list[Citation] = Field(default_factory=list)
     engine: str
