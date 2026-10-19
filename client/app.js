@@ -425,9 +425,12 @@ function openTed(t) {
 async function resumeTed(action) {
   const feedback = $("ted-feedback").value.trim();
   if (action === "revise" && !feedback) {
+    $("ted-error").textContent = "✎ כתבי קודם בתיבה למעלה מה לשנות, ואז לחצי שוב על \"בקשת שינויים\".";
+    $("ted-error").classList.remove("hidden");
     $("ted-feedback").focus();
     return;
   }
+  $("ted-error").classList.add("hidden");
   setTedBusy(action === "revise" ? "מתקנת לפי המשוב…" : "מקריאה את ההרצאה… (יכול לקחת דקה-שתיים)");
   try {
     const t = await api.send("POST", `/api/ted/${currentTed.job_id}/resume`, { action, feedback });
