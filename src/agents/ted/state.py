@@ -7,7 +7,7 @@ from agents.ted.schemas import CritiqueResult, TalkBrief
 TARGET_WORDS = 700
 WORD_MIN = 600
 WORD_MAX = 800
-HARD_CAP = int(TARGET_WORDS * 1.15)  # scripts longer than this get trimmed in code
+HARD_CAP = round(TARGET_WORDS * 1.15)  # scripts longer than this get trimmed in code
 MAX_REVISIONS = 2  # bounds the critique → revise loop
 
 
