@@ -1,0 +1,14 @@
+# Python / uv
+__pycache__/
+*.pyc
+.venv/
+
+# Secrets
+.env
+mcp.json
+.mcp.json
+.claude/settings.local.json
+
+# Local data
+*.db
+*.sqlite
