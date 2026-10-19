@@ -12,6 +12,13 @@ Endpoints
         DELETE /api/sources/{id}         remove
     Chat
         POST   /api/chat                 grounded chat (engine + impl A/B)
+    TED talk
+        POST   /api/ted                  start a talk (runs until the approval gate)
+        GET    /api/ted                  list talks
+        GET    /api/ted/{id}             one talk (content from the checkpoint)
+        POST   /api/ted/{id}/resume      approve / request changes / retry audio
+        GET    /api/ted/{id}/audio       the talk's mp3
+        DELETE /api/ted/{id}             delete talk + its graph thread
     Studio
         GET    /api/studio/artifacts     artifact kinds
         POST   /api/studio/generate      generate (501 until stage 3)
@@ -31,6 +38,7 @@ unstrict_ssl()
 from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from api import services
@@ -45,6 +53,8 @@ from api.schemas import (
     SetActiveRequest,
     SourceDetail,
     SourceInfo,
+    TedResumeRequest,
+    TedTalk,
 )
 
 app = FastAPI(title="NotebookLM (LangChain learning project)")
@@ -128,6 +138,53 @@ def chat(req: ChatRequest) -> ChatResponse:
 @app.post("/api/chat/decision", response_model=ChatResponse)
 def chat_decision(req: ChatDecisionRequest) -> ChatResponse:
     return services.run_chat_decision(req)
+
+
+# -- TED talk ------------------------------------------------------------------
+
+
+@app.post("/api/ted", response_model=TedTalk)
+def ted_start() -> TedTalk:
+    try:
+        return services.start_ted()
+    except ValueError as exc:  # e.g. "No active sources ..."
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.get("/api/ted", response_model=list[TedTalk])
+def ted_list() -> list[TedTalk]:
+    return services.list_ted()
+
+
+@app.get("/api/ted/{job_id}", response_model=TedTalk)
+def ted_get(job_id: str) -> TedTalk:
+    try:
+        return services.get_ted(job_id)
+    except services.TedNotFound as exc:
+        raise HTTPException(status_code=404, detail="Talk not found.") from exc
+
+
+@app.post("/api/ted/{job_id}/resume", response_model=TedTalk)
+def ted_resume(job_id: str, req: TedResumeRequest) -> TedTalk:
+    try:
+        return services.resume_ted(job_id, req.action, req.feedback)
+    except services.TedNotFound as exc:
+        raise HTTPException(status_code=404, detail="Talk not found.") from exc
+
+
+@app.get("/api/ted/{job_id}/audio")
+def ted_audio(job_id: str) -> FileResponse:
+    path = services.ted_audio_path(job_id)
+    if not path or not Path(path).is_file():
+        raise HTTPException(status_code=404, detail="Audio not ready.")
+    return FileResponse(path, media_type="audio/mpeg", filename=f"ted-{job_id}.mp3")
+
+
+@app.delete("/api/ted/{job_id}")
+def ted_delete(job_id: str) -> dict[str, bool]:
+    if not services.delete_ted(job_id):
+        raise HTTPException(status_code=404, detail="Talk not found.")
+    return {"ok": True}
 
 
 # -- studio --------------------------------------------------------------------

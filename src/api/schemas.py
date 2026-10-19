@@ -108,3 +108,26 @@ class AddNoteRequest(BaseModel):
     title: str
     content: str
 
+
+
+# -- TED talk ------------------------------------------------------------------
+
+
+class TedTalk(BaseModel):
+    """A TED talk job as the client sees it. Content fields come from the graph
+    checkpoint; status comes from the ted_jobs table."""
+
+    job_id: str
+    status: Literal["pending_approval", "audio_ready", "failed"]
+    created_at: str | None = None
+    topic: str | None = None
+    script_he: str | None = None
+    word_count: int | None = None
+    revision_count: int | None = None
+    critique_notes: list[str] = Field(default_factory=list)
+    error: str | None = None
+
+
+class TedResumeRequest(BaseModel):
+    action: Literal["approve", "revise"]
+    feedback: str | None = None

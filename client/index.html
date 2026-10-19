@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NotebookLM</title>
-    <link rel="stylesheet" href="/styles.css?v=4" />
+    <link rel="stylesheet" href="/styles.css?v=5" />
   </head>
   <body>
     <header class="topbar">
@@ -58,6 +58,8 @@
         <div class="panel-head"><h2>Studio</h2></div>
         <p class="muted small">Generate grounded artifacts from your sources.</p>
         <div id="artifacts" class="artifact-grid"></div>
+        <div class="panel-head"><h2>TED Talks</h2></div>
+        <ul id="ted-list" class="note-list"></ul>
         <div class="panel-head"><h2>Notes</h2></div>
         <ul id="notes" class="note-list"></ul>
       </aside>
@@ -74,8 +76,36 @@
       </div>
     </div>
 
+    <!-- TED TALK MODAL: approval gate + audio player ------------------------>
+    <div id="ted-modal" class="modal hidden">
+      <div class="modal-card">
+        <div class="modal-head">
+          <h3 id="ted-title">TED Talk</h3>
+          <button id="close-ted" class="ghost-btn">✕</button>
+        </div>
+        <div class="ted-body">
+          <div id="ted-meta" class="muted small"></div>
+          <div id="ted-notes" class="ted-notes hidden"></div>
+          <div id="ted-script" class="ted-script" dir="rtl"></div>
+          <audio id="ted-audio" class="hidden" controls></audio>
+          <div id="ted-error" class="msg system hidden"></div>
+        </div>
+        <div id="ted-actions" class="ted-actions">
+          <textarea id="ted-feedback" rows="2" dir="rtl"
+                    placeholder="מה לשנות? (למשל: תוסיפי דוגמה בנקודה השנייה)"></textarea>
+          <div class="add-actions">
+            <button id="ted-approve" class="pill-btn primary">✓ אישור והקראה</button>
+            <button id="ted-revise" class="pill-btn">✎ בקשת שינויים</button>
+            <button id="ted-retry" class="pill-btn hidden">↻ נסי שוב</button>
+            <button id="ted-save" class="pill-btn hidden">📌 שמירה כפתק</button>
+            <span id="ted-busy" class="muted small hidden"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div id="overlay" class="overlay hidden"></div>
 
-    <script src="/app.js?v=4"></script>
+    <script src="/app.js?v=5"></script>
   </body>
 </html>

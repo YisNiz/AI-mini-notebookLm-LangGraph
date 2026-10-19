@@ -13,6 +13,7 @@ from api.schemas import (
     ArtifactKind,
     ChatDecisionRequest,
     ChatRequest,
+    TedTalk,
     ChatResponse,
     Citation,
     Note,
@@ -21,6 +22,8 @@ from api.schemas import (
     SourceInfo,
 )
 from agents import chat
+from agents import ted
+from core import ted_jobs
 from core.store import store
 
 
@@ -113,6 +116,7 @@ def run_chat(req: ChatRequest) -> ChatResponse:
 # -- studio (artifacts) --------------------------------------------------------
 
 ARTIFACTS: list[ArtifactKind] = [
+    ArtifactKind(key="ted", title="TED Talk", icon="🎤", status="ready"),
     ArtifactKind(key="infographic", title="Infographic", icon="📊", status="planned"),
     ArtifactKind(key="powerpoint", title="PowerPoint", icon="📑", status="planned"),
     ArtifactKind(key="summary", title="Summary", icon="📄", status="planned"),
@@ -188,3 +192,82 @@ def run_chat_decision(req: ChatDecisionRequest) -> ChatResponse:
         thread_id=result.get("thread_id"),
         engine="chat",
     )
+
+
+# -- TED talk ------------------------------------------------------------------
+# The graph (agents/ted) does the work; ted_jobs only tracks existence + status.
+# Talk content is always read from the graph checkpoint via ted.get_values.
+
+
+class TedNotFound(Exception):
+    pass
+
+
+def _ted_view(job: dict, payload: dict | None = None, error: str | None = None) -> TedTalk:
+    """Merge the job row (status) with the talk content from the checkpoint."""
+    values = ted.get_values(job["job_id"])
+    brief = values.get("brief")
+    critique = values.get("critique")
+    payload = payload or {}
+    return TedTalk(
+        job_id=job["job_id"],
+        status=job["status"],
+        created_at=job.get("created_at"),
+        topic=payload.get("topic") or (brief.topic if brief else None),
+        script_he=payload.get("script_he") or values.get("script_he"),
+        word_count=payload.get("word_count") or values.get("word_count"),
+        revision_count=payload.get("revision_count", values.get("revision_count")),
+        critique_notes=payload.get("critique_notes") or (critique.issues if critique else []),
+        error=error,
+    )
+
+
+def start_ted() -> TedTalk:
+    """Create a job and run the graph until the approval interrupt."""
+    job_id = uuid.uuid4().hex[:12]
+    ted_jobs.create(job_id)
+    try:
+        payload = ted.run_start(job_id)
+    except Exception:
+        ted_jobs.delete(job_id)  # nothing worth keeping (e.g. no active sources)
+        raise
+    return _ted_view(ted_jobs.get(job_id), payload)
+
+
+def list_ted() -> list[TedTalk]:
+    return [_ted_view(job) for job in ted_jobs.list_all()]
+
+
+def get_ted(job_id: str) -> TedTalk:
+    job = ted_jobs.get(job_id)
+    if job is None:
+        raise TedNotFound(job_id)
+    return _ted_view(job)
+
+
+def resume_ted(job_id: str, action: str, feedback: str | None) -> TedTalk:
+    """Approve or request changes. Also serves as "retry" after a failed audio
+    step: run_resume falls back to invoke(None) when no interrupt is pending."""
+    if ted_jobs.get(job_id) is None:
+        raise TedNotFound(job_id)
+    try:
+        result = ted.run_resume(job_id, {"action": action, "feedback": feedback})
+    except Exception as exc:
+        ted_jobs.set_status(job_id, ted_jobs.FAILED)
+        return _ted_view(ted_jobs.get(job_id), error=str(exc))
+
+    if result.get("__interrupt__"):
+        ted_jobs.set_status(job_id, ted_jobs.PENDING_APPROVAL)
+        return _ted_view(ted_jobs.get(job_id), result["__interrupt__"][0].value)
+    ted_jobs.set_status(job_id, ted_jobs.AUDIO_READY)
+    return _ted_view(ted_jobs.get(job_id))
+
+
+def ted_audio_path(job_id: str) -> str | None:
+    if ted_jobs.get(job_id) is None:
+        return None
+    return ted.get_values(job_id).get("audio_path")
+
+
+def delete_ted(job_id: str) -> bool:
+    return ted_jobs.delete(job_id)
