@@ -24,3 +24,5 @@ for key in ("brief", "cast"):
     print(json.dumps(result[key].model_dump(), indent=2, ensure_ascii=False))
 print("--- lineup ---")
 print(json.dumps([i.model_dump() for i in result["lineup"]], indent=2, ensure_ascii=False))
+print("--- research ---")
+print(json.dumps([n.model_dump() for n in sorted(result.get("research", []), key=lambda n: n.item_index)], indent=2, ensure_ascii=False))

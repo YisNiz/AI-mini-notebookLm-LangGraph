@@ -1,6 +1,7 @@
-from typing import TypedDict
+import operator
+from typing import Annotated, TypedDict
 
-from agents.podcast.schemas import LineupItem, PodcastCast, TopicBrief
+from agents.podcast.schemas import LineupItem, PodcastCast, ResearchNote, TopicBrief
 
 
 class PodcastState(TypedDict, total=False):
@@ -13,3 +14,10 @@ class PodcastState(TypedDict, total=False):
     cast: PodcastCast
     # step 3 — plan_lineup
     lineup: list[LineupItem]
+    # step 4 — gather_context (parallel branches append, never overwrite)
+    research: Annotated[list[ResearchNote], operator.add]
+
+
+class GatherInput(TypedDict):
+    item: LineupItem
+    brief: TopicBrief

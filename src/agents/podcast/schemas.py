@@ -46,3 +46,13 @@ class LineupItem(BaseModel):
 
 class Lineup(BaseModel):
     items: list[LineupItem] = Field(description="The episode's lineup items, in speaking order")
+
+
+class ResearchNoteContent(BaseModel):
+    context_digest: str = Field(description="Focused summary of what the sources say about this item's question")
+    key_facts: list[str] = Field(description="Specific facts, numbers, and quotes worth using in the dialogue")
+    citations: list[str] = Field(description="Source references backing the digest, in the store's citation format")
+
+
+class ResearchNote(ResearchNoteContent):
+    item_index: int = Field(description="Index of the lineup item this note supports")
